@@ -1,5 +1,6 @@
 # linux-raspberrypi
 Embedded Linux seminar course materials
+⚠️ 注意：本プログラムは現在開発中（未完成）です。動作保証はしておりません。
 
 RaspberryPIを用いた組込みLinux教材配布のためのレポジトリです。
 RaspberryPI4とRaspberryPI3をサポートします。
