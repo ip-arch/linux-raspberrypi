@@ -1,0 +1,1 @@
+savedcmd_/home/nshimizu/rpi4/modules/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/nshimizu/rpi4/modules/Module.symvers -n -T /home/nshimizu/rpi4/modules/modules.order -i Module.symvers -e 

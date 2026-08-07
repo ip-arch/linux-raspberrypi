@@ -1,0 +1,8 @@
+Change Log
+==========
+
+
+0.1
+------
+- First version.  Imports some code from RPi.GPIO
+- PyObject redefined -> set extern for constant.h

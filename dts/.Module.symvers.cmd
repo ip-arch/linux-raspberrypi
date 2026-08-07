@@ -1,0 +1,1 @@
+cmd_/mnt/c/Users/nshimizu/Documents/Seminar/技研修/組込みLinux/rpi4/dts/Module.symvers := sed 's/\.ko$$/\.o/' /mnt/c/Users/nshimizu/Documents/Seminar/技研修/組込みLinux/rpi4/dts/modules.order | scripts/mod/modpost -m -a  -o /mnt/c/Users/nshimizu/Documents/Seminar/技研修/組込みLinux/rpi4/dts/Module.symvers -e -i Module.symvers   -T -

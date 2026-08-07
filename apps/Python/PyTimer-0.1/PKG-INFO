@@ -1,0 +1,34 @@
+Metadata-Version: 1.1
+Name: PyTimer
+Version: 0.1
+Summary: A module to control Interval Timer
+Home-page: http://www.ip-arch.jp
+Author: Naohiko Shimizu
+Author-email: nshimizu@ip-arch.jp
+License: MIT
+Description: This package provides a class to control the POSIX timer on Unix like OS.
+        It provides create, delete, settime, gettime functionalities which is corresponds to
+        POSIX timer_create, timer_delete timer_settime, timer_gettime, respectively.
+        
+        I hope the code is useful enough but it may not suitable for time critical applications.
+        
+        
+        Change Log
+        ==========
+        
+        
+        0.1
+        ------
+        - First version.  Imports some code from RPi.GPIO
+        
+Keywords: Interval Timer
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Operating System :: POSIX :: Linux
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development
+Classifier: Topic :: Home Automation
+Classifier: Topic :: System :: Hardware

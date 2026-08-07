@@ -1,0 +1,38 @@
+// #define GPIO_ACTIVE_HIGH 0 // from dt-bindings/gpio/gpio.h
+#include <dt-bindings/gpio/gpio.h>
+/dts-v1/;
+/plugin/;
+/ {
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+		exboard {
+			compatible = "shmz,exboard";
+			status="okay";
+			ex_sw-gpios = <&gpio 2 GPIO_ACTIVE_LOW> , <&gpio 3 GPIO_ACTIVE_LOW>;
+			ex_led-gpios = <&gpio 4 GPIO_ACTIVE_HIGH> , <&gpio 9 GPIO_ACTIVE_HIGH>;
+			ex_disp-gpios = <&gpio 7 GPIO_ACTIVE_HIGH> , <&gpio 8 GPIO_ACTIVE_HIGH>;
+			ex_seg-gpios = 
+				<&gpio 14 GPIO_ACTIVE_HIGH> , <&gpio 15 GPIO_ACTIVE_HIGH>,
+				<&gpio 17 GPIO_ACTIVE_HIGH> , <&gpio 18 GPIO_ACTIVE_HIGH>,
+				<&gpio 22 GPIO_ACTIVE_HIGH> , <&gpio 23 GPIO_ACTIVE_HIGH>,
+				<&gpio 24 GPIO_ACTIVE_HIGH> , <&gpio 25 GPIO_ACTIVE_HIGH>;
+			gpio-line-names = "ex_sw1",
+                          "ex_sw2",
+                          "ex_led1",
+                          "ex_led2",
+                          "ex_disp1",
+                          "ex_disp2",
+                          "ex_seg_a",
+                          "ex_seg_b",
+                          "ex_seg_c",
+                          "ex_seg_d",
+                          "ex_seg_e",
+                          "ex_seg_f",
+                          "ex_seg_g",
+                          "ex_seg_dp";
+
+			};
+	};
+};
+};
