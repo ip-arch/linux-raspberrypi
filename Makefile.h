@@ -48,7 +48,7 @@ SYS=$(shell uname -o)
 ifeq ($(SYS),Cygwin)
 	OS=Cygwin
 else
-OS=$(shell lsb_release -si)
+OS := $(shell . /etc/os-release && echo $$ID)
 endif
 
 PKGWD=$(shell pwd)
@@ -58,7 +58,7 @@ MANPATH=$(PKGWD)/share/man
 LINUX_MAJOR_MINOR = $(word 1,$(subst ., ,$(LINUXVER))).$(word 2,$(subst ., ,$(LINUXVER)))
 LINUX_BRANCH = rpi-$(LINUX_MAJOR_MINOR).y
 
-ifneq (,$(filter Ubuntu Debian,$(OS)))
+ifneq (,$(filter ubuntu debian,$(OS)))
 TOOLDIR=/usr/bin/
 ifeq ($(ARCH), arm)
 CROSS_COMPILE=arm-linux-gnueabihf-
