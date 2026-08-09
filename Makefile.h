@@ -10,6 +10,8 @@
 #
 #
 
+SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.sbom.xz
+
 # --- linux/ の場所を自己検出する ---
 # Makefile.h が include された相対パス（"Makefile.h" または "../Makefile.h" 等）から
 # ディレクトリ部分を取り出す。トップレベルからは "./"、演習ディレクトリからは "../" になる。
@@ -29,7 +31,7 @@ ifndef SBOM_URL
 ifdef BUILT_SBOM_URL
 SBOM_URL := $(BUILT_SBOM_URL)
 else
-SBOM_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.sbom.xz
+SBOM_URL := $(SBOM_DIST_URL)
 endif
 endif
 
