@@ -1,35 +1,51 @@
 include Makefile.h
 
-sbom: $(RASPIOS_DATE)-raspios-$(DEBIAN_CODENAME)-$(RASPIOS_TARG)-$(RASPIOS_SZ).sbom.xz
+sbom: $(SBOM_NAME)
 
-$(RASPIOS_DATE)-raspios-$(DEBIAN_CODENAME)-$(RASPIOS_TARG)-$(RASPIOS_SZ).sbom.xz:
-	wget https://downloads.raspberrypi.org/raspios_$(RASPIOS_SZ)_$(RASPIOS_TARG)/images/raspios_$(RASPIOS_SZ)_$(RASPIOS_TARG)-$(RASPIOS_DATE)/$@
+$(SBOM_NAME):
+	wget -nc $(SBOM_URL)
 
-linux/.headername: $(RASPIOS_DATE)-raspios-$(DEBIAN_CODENAME)-$(RASPIOS_TARG)-$(RASPIOS_SZ).sbom.xz
+
+$(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
 	mkdir -p linux
-	VER=$$(xz -dc $< | jq -r '.packages[]? | select(.name == "linux-headers-$(LINUXVER)+rpt-common-rpi") | .versionInfo') ;\
+	xzcat $< | jq -r --arg suffix "$(ARCH_SUFFIX)" \
+	 '.packages[] | select(.name | (test("^linux-headers-[0-9]+\\.[0-9]+\\.[0-9]+\\+")  and endswith($$suffix)) ) | .name' > $@
+
+$(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
+	sed -E 's/^linux-headers-([0-9]+\.[0-9]+\.[0-9]+).*/\1/' \
+	  $< > $@
+	
+
+$(LINUX_HEADERNAME):  $(LINUXVER_FILE)
+	mkdir -p linux
+	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.xz| tar -xJ -C linux
+	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.xz| tar -xJ -C linux ;\
+	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb ;\
+	ar p linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb data.tar.xz | tar -xJ -C linux
 	
-CHANGE_LOG:=linux/usr/share/doc/linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)/changelog.Debian.gz 
 
-linux/.linux_commit: linux/.headername
-	echo $(CHANGE_LOG) ; \
-	gunzip -dcf $(CHANGE_LOG) | \
+$(LINUX_COMMIT): $(LINUX_HEADERNAME)
+	CHANGE_LOG=linux/usr/share/doc/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi/changelog.Debian.gz  ; \
+	echo $${CHANGE_LOG} ; \
+	gunzip -dcf $${CHANGE_LOG} | \
 	sed -n 's/^  \* Linux commit: //p' | \
 	head -n1 > $@
+	cat $@
 
 
-linux/usr/src/linux/.git: linux/.linux_commit
+linux/usr/src/linux/.git: $(LINUX_COMMIT)
+	LINUX_MAJOR_MINOR=$(word 1,$(subst ., ,$(shell cat $(LINUXVER_FILE)))).$(word 2,$(subst ., ,$(shell cat $(LINUXVER_FILE)))) ; \
+	LINUX_BRANCH=rpi-$${LINUX_MAJOR_MINOR}.y ; \
 	(cd linux/usr/src; \
-	git clone --filter=blob:none --single-branch --branch $(LINUX_BRANCH) \
+	git clone --filter=blob:none --single-branch --branch $${LINUX_BRANCH} \
 	    https://github.com/raspberrypi/linux.git linux \
 	)
-linux/.linux_src: linux/usr/src/linux/.git linux/.linux_commit
+linux/.linux_src: linux/usr/src/linux/.git $(LINUX_COMMIT)
 	cd linux/usr/src/linux && git fetch
-	cd linux/usr/src/linux && git checkout $$(cat ../../../../linux/.linux_commit)
+	cd linux/usr/src/linux && git checkout $$(cat ../../../../$(LINUX_COMMIT))
 	touch $@
 
 pi5:
@@ -41,17 +57,23 @@ pi4:
 pi3:
 	$(MAKE) RPI=3 pilinux
 
-SYMVERS=linux/usr/src/linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
-DOT_CONFIG=linux/usr/src/linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)/.config
+SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
+DOT_CONFIG=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/.config
 
-pilinux:	$(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src linux/.headername
+pilinux:	$(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME)
 	echo $(SYMVERS) $(DOT_CONFIG)
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux
 	( cd linux/usr/src/linux ;\
 	KERNEL=$(KERNEL_NAME) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) make oldconfig prepare modules_prepare; \
 	)
+	make RPI=$(RPI) SBOM_URL=$(SBOM_URL) $(BUILD_CONFIG)
 	make exboard.dtbo
+
+$(BUILD_CONFIG):
+	echo "BUILT_RPI := $(RPI)" > $(BUILD_CONFIG)
+	echo "BUILT_SBOM_URL := $(SBOM_URL)" >> $(BUILD_CONFIG)
+
 
 exboard.dtbo: dts/exboard.dtso
 	cpp -nostdinc -undef -D__DTS__ -x assembler-with-cpp \
@@ -70,7 +92,7 @@ pi3-veryclean:
 veryclean:
 	make clean
 	rm -fr exboard.dtbo
-	rm  -f $(RASPIOS_DATE)-raspios-$(DEBIAN_CODENAME)-$(RASPIOS_TARG)-$(RASPIOS_SZ).sbom.xz linux-headers-$(LINUXVER)+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat linux/.headername)_$(RASPIOS_TARG).deb 
+	rm  -f $(SBOM_NAME) linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat $(LINUX_HEADERNAME))_$(RASPIOS_TARG).deb linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb
 	rm -fr linux
 clean:
 	(cd modules; make clean)

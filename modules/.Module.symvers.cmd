@@ -1,1 +1,1 @@
-savedcmd_/home/nshimizu/rpi4/modules/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/nshimizu/rpi4/modules/Module.symvers -n -T /home/nshimizu/rpi4/modules/modules.order -i Module.symvers -e 
+savedcmd_/home/nshimizu/nshimizu/Documents/Seminar/技研修/組込みLinux/linux-raspberrypi/modules/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /home/nshimizu/nshimizu/Documents/Seminar/技研修/組込みLinux/linux-raspberrypi/modules/Module.symvers -n -T /home/nshimizu/nshimizu/Documents/Seminar/技研修/組込みLinux/linux-raspberrypi/modules/modules.order -i Module.symvers -e 

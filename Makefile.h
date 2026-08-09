@@ -10,7 +10,50 @@
 #
 #
 
-RPI ?= 4
+# --- linux/ の場所を自己検出する ---
+# Makefile.h が include された相対パス（"Makefile.h" または "../Makefile.h" 等）から
+# ディレクトリ部分を取り出す。トップレベルからは "./"、演習ディレクトリからは "../" になる。
+MAKEFILE_H_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+BUILD_CONFIG   := $(MAKEFILE_H_DIR)linux/.build_config
+-include $(BUILD_CONFIG)
+
+ifndef RPI
+ifdef BUILT_RPI
+RPI := $(BUILT_RPI)
+else
+RPI := 4
+endif
+endif
+
+ifndef SBOM_URL
+ifdef BUILT_SBOM_URL
+SBOM_URL := $(BUILT_SBOM_URL)
+else
+SBOM_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.sbom.xz
+endif
+endif
+
+
+
+# pilinux系（linux/を作り直す）ターゲットの実行時はチェックしない
+CONFIG_CHECK_SKIP_GOALS := pilinux pi3 pi4 pi5 veryclean
+ifeq ($(filter $(CONFIG_CHECK_SKIP_GOALS),$(MAKECMDGOALS)),)
+ifdef BUILT_RPI
+ifneq ($(RPI),$(BUILT_RPI))
+$(error linux/ は RPI=$(BUILT_RPI) でビルドされています。RPI=$(RPI) を使う場合は先に 'make RPI=$(RPI) pilinux' を実行してください（意図的に混在させる場合は ALLOW_RPI_MISMATCH=1 を指定）)
+endif
+ifdef SBOM_URL
+ifneq ($(SBOM_URL),$(BUILT_SBOM_URL))
+$(warning SBOM_URL が pilinux 実行時（$(BUILT_SBOM_URL)）と異なります。意図しない場合は 'make RPI=$(RPI) SBOM_URL=... pilinux' を再実行してください)
+endif
+endif
+endif
+endif
+
+# 明示的に無視したい場合の逃げ道
+ifdef ALLOW_RPI_MISMATCH
+override BUILT_RPI := $(RPI)
+endif
 
 # Raspberry Pi kernel package suffix
 RPI_SUFFIX_5 = 2712
@@ -19,12 +62,12 @@ RPI_SUFFIX_3 = v7
 RPI_SUFFIX_2 = v6
 ARCH_SUFFIX = $(RPI_SUFFIX_$(RPI))
 
-# Raspberry Pi OS
-DEBIAN_CODENAME = bookworm
-RASPIOS_SZ = lite
-RASPIOS_DATE = 2025-05-13
+SBOM_NAME = $(shell basename $(SBOM_URL))
+LINUX_HEADER_PACKAGE_FILE=linux/.header_package
+LINUXVER_FILE=linux/.linux_ver
+LINUX_HEADERNAME=linux/.headername
+LINUX_COMMIT=linux/.commit
 
-LINUXVER = 6.12.25
 
 ifeq ($(RPI), 5)
 KERNEL_ARCH_BIT=64
@@ -44,6 +87,11 @@ ARCH=arm
 GNU_ARCH=arm
 endif
 
+ifneq (,$(findstring $(RASPIOS_TARG),$(SBOM_URL)))
+else
+$(error SBOM_URL ($(SBOM_URL)) does not look like a $(RASPIOS_TARG) image for RPI=$(RPI) — update SBOM_URL in Makefile.h)
+endif
+
 SYS=$(shell uname -o)
 ifeq ($(SYS),Cygwin)
 	OS=Cygwin
@@ -55,8 +103,6 @@ PKGWD=$(shell pwd)
 
 MANDB=$(PKGWD)/share/man_db.conf
 MANPATH=$(PKGWD)/share/man
-LINUX_MAJOR_MINOR = $(word 1,$(subst ., ,$(LINUXVER))).$(word 2,$(subst ., ,$(LINUXVER)))
-LINUX_BRANCH = rpi-$(LINUX_MAJOR_MINOR).y
 
 ifneq (,$(filter ubuntu debian,$(OS)))
 TOOLDIR=/usr/bin/
