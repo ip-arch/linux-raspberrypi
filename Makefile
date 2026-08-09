@@ -92,7 +92,7 @@ pi3-veryclean:
 veryclean:
 	make clean
 	rm -fr exboard.dtbo
-	rm  -f $(SBOM_NAME) linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat $(LINUX_HEADERNAME))_$(RASPIOS_TARG).deb linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb
+	rm  -f $(SBOM_NAME) linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat $(LINUX_HEADERNAME))_$(RASPIOS_TARG).deb linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$(shell cat $(LINUX_HEADERNAME))_all.deb
 	rm -fr linux
 clean:
 	(cd modules; make clean)
