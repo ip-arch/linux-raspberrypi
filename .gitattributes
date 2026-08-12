@@ -1,4 +1,5 @@
 config.txt text eol=lf
-network-config text eol=lf
+cmdline.txt text eol=lf
 userconf.txt text eol=lf
+ssh text eol=lf
 
