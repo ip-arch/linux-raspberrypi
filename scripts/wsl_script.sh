@@ -5,9 +5,8 @@ set -eu
 DIR=$HOME
 sudo apt update
 sudo apt upgrade -y
-sudo apt install wget sudo git build-essential crossbuild-essential-armhf jq xz-utils bison flex bc universal-ctags vim file qemu-system-riscv -y
+sudo apt install wget sudo git build-essential crossbuild-essential-armhf jq xz-utils bison flex bc universal-ctags vim file -y
 cd $DIR
-[ -d linux-riscv32 ] || git clone https://github.com/ip-arch/linux-riscv32.git
 [ -d linux-raspberrypi ] || git clone https://github.com/ip-arch/linux-raspberrypi.git
 wget -nc https://github.com/ip-arch/linux-raspberrypi/releases/download/emb_materials/gdbserver_13.1-3_armhf.deb
 
