@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Naohiko Shimizu <nshimizu@ip-arch.jp>
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/mman.h>
+#include "read_counter.h"
+int main () {
+   void *mm;
+   uint64_t start_time, end_time;
+   int *p = (int*)0x10000000, tmp;
+   mm = mmap((void*)p, 0x1000, PROT_READ|PROT_WRITE, 
+		   MAP_ANONYMOUS|MAP_PRIVATE, 0, 0);
+// 1st access
+   start_time=read_freerun_counter();
+   *p = 10;
+   // tmp = *p;
+   end_time=read_freerun_counter();
+   printf("1st tick = %lld\n", (end_time - start_time));
+// 2nd access
+   start_time=read_freerun_counter();
+   *p = 20;
+   // tmp = *p;
+   end_time=read_freerun_counter();
+   printf("2nd tick = %lld\n", (end_time - start_time));
+   return 0;
+}
