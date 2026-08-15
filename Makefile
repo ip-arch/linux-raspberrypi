@@ -5,11 +5,30 @@ sbom: $(SBOM_NAME)
 $(SBOM_NAME):
 	wget -nc $(SBOM_URL)
 
+install: 
+	sh scripts/wsl_script.sh
 
 $(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
 	mkdir -p linux
 	xzcat $< | jq -r --arg suffix "$(ARCH_SUFFIX)" \
 	 '.packages[] | select(.name | (test("^linux-headers-[0-9]+\\.[0-9]+\\.[0-9]+\\+")  and endswith($$suffix)) ) | .name' > $@
+
+$(GSBSERVER_FILE):	$(SBOM_NAME)
+	mkdir -p linux
+    	xzcat $< | 
+    	jq -r '
+        .packages[]?
+        | select(.name == "gdb")
+        | .externalRefs[]?
+        | select(.referenceType == "purl")
+        | .referenceLocator
+        | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)")
+        | "gdbserver_\(.version)_\(.arch).deb"
+    	'
+	) > $@
+	wget -nc \
+	    "https://raspbian.raspberrypi.com/raspbian/pool/main/g/gdb/$(cat $@)"
+
 
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
 	sed -E 's/^linux-headers-([0-9]+\.[0-9]+\.[0-9]+).*/\1/' \
@@ -60,7 +79,7 @@ pi3:
 SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
 DOT_CONFIG=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/.config
 
-pilinux:	$(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME)
+pilinux:	$(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME) $(GDBSERVER_FILE)
 	echo $(SYMVERS) $(DOT_CONFIG)
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux

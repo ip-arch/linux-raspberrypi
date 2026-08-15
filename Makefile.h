@@ -69,6 +69,7 @@ LINUX_HEADER_PACKAGE_FILE=linux/.header_package
 LINUXVER_FILE=linux/.linux_ver
 LINUX_HEADERNAME=linux/.headername
 LINUX_COMMIT=linux/.commit
+GDBSERVER_FILE=linux/.gdbserver
 
 
 ifeq ($(RPI), 5)
