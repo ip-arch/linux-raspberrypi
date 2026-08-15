@@ -18,8 +18,7 @@ $(GDBSERVER_FILE):	$(SBOM_NAME)
 	xzcat $< |  \
 	jq -r ' .packages[]?  | select(.name == "gdb") | .externalRefs[]?  | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | "gdbserver_\(.version)_\(.arch).deb" ' > $@
 	wget -nc \
-	    "https://ftp.debian.org/pool/main/g/gdb/$$(cat $@)"
-
+	    "https://ftp.debian.org/debian/pool/main/g/gdb/$$(cat $@)"
 
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
 	sed -E 's/^linux-headers-([0-9]+\.[0-9]+\.[0-9]+).*/\1/' \
