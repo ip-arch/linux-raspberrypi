@@ -18,7 +18,7 @@ $(GDBSERVER_FILE):	$(SBOM_NAME)
 	xzcat $< |  \
 	jq -r ' .packages[]?  | select(.name == "gdb") | .externalRefs[]?  | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | "gdbserver_\(.version)_\(.arch).deb" ' > $@
 	wget -nc \
-	    "https://raspbian.raspberrypi.com/raspbian/pool/main/g/gdb/$$(cat $@)"
+	    "https://ftp.debian.org/pool/main/g/gdb/$$(cat $@)"
 
 
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
