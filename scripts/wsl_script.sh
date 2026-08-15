@@ -8,7 +8,20 @@ sudo apt upgrade -y
 sudo apt install wget sudo git build-essential crossbuild-essential-armhf jq xz-utils bison flex bc universal-ctags vim file -y
 cd $DIR
 [ -d linux-raspberrypi ] || git clone https://github.com/ip-arch/linux-raspberrypi.git
-wget -nc https://github.com/ip-arch/linux-raspberrypi/releases/download/emb_materials/gdbserver_13.1-3_armhf.deb
+GDBSERVER_FILE=$(
+    xzcat "$SBOM_NAME" |
+    jq -r '
+        .packages[]?
+        | select(.name == "gdb")
+        | .externalRefs[]?
+        | select(.referenceType == "purl")
+        | .referenceLocator
+        | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)")
+        | "gdbserver_\(.version)_\(.arch).deb"
+    '
+)
+wget -nc \
+    "https://raspbian.raspberrypi.com/raspbian/pool/main/g/gdb/$GDBSERVER_FILE"
 
 cd $DIR/linux-raspberrypi 
 if grep -qi microsoft /proc/version; then
