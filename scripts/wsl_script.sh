@@ -11,9 +11,13 @@ cd $DIR
 wget -nc https://github.com/ip-arch/linux-raspberrypi/releases/download/emb_materials/gdbserver_13.1-3_armhf.deb
 
 cd $DIR/linux-raspberrypi 
-# ラズパイセットアップファイルをC：直下にコピー
-# Raspberry Pi ImagerでOSイメージを書き込み後、bootfsボリュームにこの内容をコピーする
-mkdir -p /mnt/c/linux_rpi_setup; cp setup/* /mnt/c/linux_rpi_setup
+if grep -qi microsoft /proc/version; then
+    # WSLの場合
+    # ラズパイセットアップファイルをC：直下にコピー
+    # Raspberry Pi ImagerでOSイメージを書き込み後、bootfsボリュームにこの内容をコピーする
+    mkdir -p /mnt/c/linux_rpi_setup
+    cp setup/* /mnt/c/linux_rpi_setup
+fi
 # Linuxカーネルを取得し、ラズパイのカーネル開発環境作成
 make pi4
 # 確認用 timer.ko 作成
