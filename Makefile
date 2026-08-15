@@ -15,8 +15,8 @@ $(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
 
 $(GSBSERVER_FILE):	$(SBOM_NAME)
 	mkdir -p linux
-    	xzcat $< | 
-    	jq -r '
+	xzcat $< | 
+	jq -r '
         .packages[]?
         | select(.name == "gdb")
         | .externalRefs[]?
