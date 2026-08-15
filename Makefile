@@ -15,10 +15,10 @@ $(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
 
 $(GDBSERVER_FILE):	$(SBOM_NAME)
 	mkdir -p linux
-	xzcat $< | 
-	jq -r ' .packages[]?  | select(.name == "gdb") | .externalRefs[]?  | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | "gdbserver_\(.version)_\(.arch).deb" ') > $@
+	xzcat $< |  \
+	jq -r ' .packages[]?  | select(.name == "gdb") | .externalRefs[]?  | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | "gdbserver_\(.version)_\(.arch).deb" ' > $@
 	wget -nc \
-	    "https://raspbian.raspberrypi.com/raspbian/pool/main/g/gdb/$(cat $@)"
+	    "https://raspbian.raspberrypi.com/raspbian/pool/main/g/gdb/$$(cat $@)"
 
 
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
