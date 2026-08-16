@@ -8,6 +8,12 @@ clean:
 	rm -rf ./.[a-z]* *.ko *.mod.c *.o *.mod modules.order Module.symvers *~ *.exe
 
 
+$(BUILD)/drivers/gpio/gpio-sim.ko:
+	make $@
+
+gpio-sim.ko: $(BUILD)/drivers/gpio/gpio-sim.ko
+	cp $< $@
+
 ################################
 # suffix rules
 ################################
