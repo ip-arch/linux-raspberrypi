@@ -21,7 +21,7 @@ clean:
 	$(CC) -S -O2 $< -o $*.s
 
 .c.exe:
-	$(CC) -g -O2 $< -o $*.exe $(ADDFLAGS) -lrt
+	$(CC) -g -O2 $< -o $*.exe $(ADDFLAGS)
 
 %.debug:
 	$(GDB) $*
