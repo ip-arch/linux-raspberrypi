@@ -23,7 +23,31 @@ $(GDBSERVER_FILE):	$(SBOM_NAME)
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
 	sed -E 's/^linux-headers-([0-9]+\.[0-9]+\.[0-9]+).*/\1/' \
 	  $< > $@
-	
+
+$(LINUX_LIBC):  $(LINUXVER_FILE)
+	mkdir -p linux
+	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6") | .versionInfo') ;\
+	VER_CLEAN=$${VER#*:} ;\
+	echo $$VER_CLEAN > $@ ; \
+	wget -nc https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+
+$(LINUX_LIBCDEV):  $(LINUXVER_FILE)
+	mkdir -p linux
+	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6-dev") | .versionInfo') ;\
+	VER_CLEAN=$${VER#*:} ;\
+	echo $$VER_CLEAN > $@ ; \
+	wget -nc https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+
+
+$(LINUX_LINUX_LIBCDEV):  $(LINUXVER_FILE)
+	mkdir -p linux
+	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "linux-libc-dev") | .versionInfo') ;\
+	VER_CLEAN=$${VER#*:} ;\
+	echo $$VER_CLEAN > $@ ; \
+	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-libc-dev_$${VER_CLEAN}_all.deb ; \
+	ar p linux-libc-dev_$${VER_CLEAN}_all.deb data.tar.xz| tar -xJ -C linux ;
 
 $(LINUX_HEADERNAME):  $(LINUXVER_FILE)
 	mkdir -p linux
@@ -57,6 +81,7 @@ linux/.linux_src: linux/usr/src/linux/.git $(LINUX_COMMIT)
 	cd linux/usr/src/linux && git checkout $$(cat ../../../../$(LINUX_COMMIT))
 	touch $@
 
+
 pi5:
 	$(MAKE) RPI=5 pilinux
 
@@ -69,8 +94,8 @@ pi3:
 SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
 DOT_CONFIG=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/.config
 
-pilinux:	$(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME) $(GDBSERVER_FILE)
-	echo $(SYMVERS) $(DOT_CONFIG)
+pilinux: $(DEPEND) $(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME) $(GDBSERVER_FILE)
+	echo OS=$(OS) $(SYMVERS) $(DOT_CONFIG) DEPEND=$(DEPEND)
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux
 	( cd linux/usr/src/linux ;\
@@ -102,6 +127,7 @@ veryclean:
 	make clean
 	rm -fr exboard.dtbo
 	rm  -f $(SBOM_NAME) linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat $(LINUX_HEADERNAME))_$(RASPIOS_TARG).deb linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$(shell cat $(LINUX_HEADERNAME))_all.deb
+	rm -f $(GDBSERVER_FILE) $(LINUX_LINUX_LIBCDEV) $(LINUX_LIBCDEV) $(LINUX_LIBC)
 	rm -fr linux
 clean:
 	(cd modules; make clean)

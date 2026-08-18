@@ -4,8 +4,19 @@ CC=$(CROSS_COMPILE)gcc
 GDB=$(CROSS_COMPILE)gdb
 RANLIB=$(CROSS_COMPILE)ranlib
 # LDFLAGS="-lrt"
-CFLAGS="-I $(SYSROOT)/usr/include"
 MANDB=$(PKGWD)/share/man_db.conf
+MULTIARCH = $(GNU_ARCH)-linux-gnu$(EABI)
+
+ifeq ($(OS), almalinux)
+CFLAGS  += --sysroot=$(SYSROOT) \
+	   -B$(SYSROOT)/usr/lib/$(MULTIARCH) \
+	   -B$(SYSROOT)/lib/$(MULTIARCH) \
+	   -I$(SYSROOT)/usr/include/$(MULTIARCH) \
+
+LDFLAGS += -L$(SYSROOT)/usr/lib/$(MULTIARCH) \
+           -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(RASPIOS_TARG).so.3
+
+endif
 
 clean:
 	rm -rf *.exe *.o *.s *~ {API,RPI,mem}/*.exe
@@ -21,7 +32,7 @@ clean:
 	$(CC) -S -O2 $< -o $*.s
 
 .c.exe:
-	$(CC) -g -O2 $< -o $*.exe $(ADDFLAGS)
+	$(CC) -g -O2 $< -o $*.exe $(ADDFLAGS) $(CFLAGS) $(LDFLAGS)
 
 %.debug:
 	$(GDB) $*

@@ -18,6 +18,7 @@ SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/ras
 MAKEFILE_H_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 BUILD_CONFIG   := $(MAKEFILE_H_DIR)linux/.build_config
 -include $(BUILD_CONFIG)
+BUILD_DIR   := $(MAKEFILE_H_DIR)linux
 
 ifndef RPI
 ifdef BUILT_RPI
@@ -67,6 +68,9 @@ ARCH_SUFFIX = $(RPI_SUFFIX_$(RPI))
 SBOM_NAME = $(shell basename $(SBOM_URL))
 LINUX_HEADER_PACKAGE_FILE=linux/.header_package
 LINUXVER_FILE=linux/.linux_ver
+LINUX_LIBCDEV=linux/.libc6_dev
+LINUX_LIBC=linux/.libc6
+LINUX_LINUX_LIBCDEV=linux/.linux_libc_dev
 LINUX_HEADERNAME=linux/.headername
 LINUX_COMMIT=linux/.commit
 GDBSERVER_FILE=linux/.gdbserver
@@ -85,9 +89,11 @@ endif
 ifeq ($(KERNEL_ARCH_BIT),64)
 ARCH=arm64
 GNU_ARCH=aarch64
+EABI=
 else
 ARCH=arm
 GNU_ARCH=arm
+EABI=eabihf
 endif
 
 ifneq (,$(findstring $(RASPIOS_TARG),$(SBOM_URL)))
@@ -134,3 +140,7 @@ $(TOOLDIR)$(CROSS_COMPILE)gcc:
 	sudo dnf install  gcc-$(GNU_ARCH)-linux-gnu git bc bison flex openssl-devel ncurses-devel
 endif
 
+ifeq ($(OS), almalinux)
+DEPEND := $(LINUX_LIBC) $(LINUX_LIBCDEV) $(LINUX_LINUX_LIBCDEV)
+SYSROOT := $(BUILD_DIR)
+endif
