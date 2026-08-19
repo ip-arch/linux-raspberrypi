@@ -15,7 +15,7 @@ static int irq;
 long count = 0;
 struct gpio_desc *gpio_led, *gpio_sw;
 
-static irqreturn_t irq_sw(int irq, void *dev_id, struct pt_regs *regs) {
+static irqreturn_t irq_sw(int irq, void *dev_id) {
 	ledlevel = 1 - ledlevel;
 	gpiod_set_value(gpio_led,ledlevel);
 	count++;
@@ -42,7 +42,7 @@ static int my_init(struct platform_device *pdev)
 
 	irq = gpiod_to_irq(gpio_sw);
 	if(request_irq(irq,
-		(irq_handler_t) irq_sw,
+		irq_sw,
 		IRQF_SHARED|IRQF_TRIGGER_FALLING,
 		"GPIO SW INT",
 		THIS_MODULE->name)<0) printk("request_irq failed");

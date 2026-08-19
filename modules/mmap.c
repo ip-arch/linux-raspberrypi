@@ -81,7 +81,7 @@ static struct cdev c_dev;
 int init_module(void)		{
 	mmap_area=(void*)__get_free_page(GFP_KERNEL);
 	*(int*)(mmap_area)=0x12345678;
-	printk("Hello mmap(%p)\n",(void*)mmap_area);
+	printk("Hello mmap(%px)\n",(void*)mmap_area);
 	alloc_chrdev_region(&dev,0,1,"mmap_test");
 	sClass=class_create(THIS_MODULE,"Mmap");
 	sDevice=device_create(sClass,NULL,dev,NULL,"Mmap");

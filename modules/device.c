@@ -17,14 +17,14 @@ struct gpio_desc *gpio_led;
 static ssize_t led_read(struct file *f, char __user *buf, size_t
   len, loff_t *off)
 {
-printk("buf = %p",buf);
+printk("buf = %px",buf);
   copy_to_user(buf, (void*)&led, (len>4)?4:len);
   return (len>4)?4:len;
 }
 static ssize_t led_write(struct file *f, const char __user *buf,
   size_t len, loff_t *off)
 {
-printk("buf = %p",buf);
+printk("buf = %px",buf);
   copy_from_user((void*)&led, buf, (len>4)?4:len);
   gpiod_set_value(gpio_led,led&1);
   return (len>4)?4:len;

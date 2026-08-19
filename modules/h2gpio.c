@@ -12,7 +12,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Naohiko Shimizu");
 
-int ledlevel = 1;
+int ledlevel = 0;
 static int irq;
 long count = 0;
 static int flag=0;
@@ -20,6 +20,8 @@ struct gpio_desc *gpio_led, *gpio_sw;
 
 struct hrtimer hrt;
 ktime_t kt;
+
+enum hrtimer_restart timer_timeout(struct hrtimer *timer);
 
 enum hrtimer_restart timer_timeout(struct hrtimer *timer)
 {
@@ -31,7 +33,7 @@ enum hrtimer_restart timer_timeout(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-static irqreturn_t irq_sw(int irq, void *dev_id, struct pt_regs *regs) {
+static irqreturn_t irq_sw(int irq, void *dev_id) {
 	if(!flag) {
 		flag=1;
 	        kt=ktime_set(0,20000000UL);
@@ -44,7 +46,6 @@ static irqreturn_t irq_sw(int irq, void *dev_id, struct pt_regs *regs) {
 
 static int my_init(struct platform_device *pdev)
 {
-    int ret;
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
@@ -64,7 +65,7 @@ static int my_init(struct platform_device *pdev)
 
 	irq = gpiod_to_irq(gpio_sw);
 	if(request_irq(irq,
-		(irq_handler_t) irq_sw,
+		irq_sw,
 		IRQF_SHARED|IRQF_TRIGGER_FALLING,
 		"GPIO SW INT",
 		THIS_MODULE->name)<0) printk("request_irq failed");
@@ -75,7 +76,7 @@ static int my_init(struct platform_device *pdev)
 
 static void my_remove(struct platform_device *pdev)
 {
-    pr_info("Goodbye hGPIO interrupt count=%d\n",count);
+    pr_info("Goodbye hGPIO interrupt count=%ld\n",count);
     free_irq(irq, THIS_MODULE->name);
     return;
 }

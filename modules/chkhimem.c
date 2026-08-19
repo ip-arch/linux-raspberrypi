@@ -7,9 +7,9 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Naohiko Shimizu");
 
 int init_module(void)		{
-	printk("TASK_SIZE=%p, PAGE_OFFSET=%p, high_memory=%p"
-		" VMALLOC_START=%p, VMALLOC_END=%p\n",
-	TASK_SIZE, PAGE_OFFSET, high_memory, VMALLOC_START, VMALLOC_END
+	pr_info("TASK_SIZE=%lx, PAGE_OFFSET=%lx, high_memory=%lx"
+		" VMALLOC_START=%lx, VMALLOC_END=%lx\n",
+	TASK_SIZE, PAGE_OFFSET, (unsigned long)high_memory, VMALLOC_START, VMALLOC_END
 	); return 0; }
 void cleanup_module(void)	{  }
 

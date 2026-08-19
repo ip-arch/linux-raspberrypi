@@ -48,7 +48,7 @@ static dev_t dev0;
 static ssize_t led_read(struct file *f, char __user *buf, size_t
   len, loff_t *off)
 {
-printk("buf = %p",buf);
+printk("buf = %px",buf);
   copy_to_user(buf, (void*)&advance, (len>4)?4:len);
   del_timer(&timer_x);
   add_timer(&timer_x);
@@ -57,7 +57,7 @@ printk("buf = %p",buf);
 static ssize_t led_write(struct file *f, const char __user *buf,
   size_t len, loff_t *off)
 {
-printk("buf = %p",buf);
+printk("buf = %px",buf);
   copy_from_user((void*)&advance, buf, (len>4)?4:len);
   del_timer(&timer_x);
   add_timer(&timer_x);

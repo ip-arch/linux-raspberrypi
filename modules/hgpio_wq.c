@@ -25,7 +25,7 @@ void work_hgpio(struct work_struct *work) {
 
 DECLARE_WORK(wq_body, work_hgpio);
 
-static irqreturn_t irq_sw(int irq, void *dev_id, struct pt_regs *regs) {
+static irqreturn_t irq_sw(int irq, void *dev_id) {
 	if(!wqreq) {
 		schedule_work(&wq_body);
 		wqreq++;
@@ -55,7 +55,7 @@ static int my_init(struct platform_device *pdev)
 
 	irq = gpiod_to_irq(gpio_sw);
 	if(request_irq(irq,
-		(irq_handler_t) irq_sw,
+		irq_sw,
 		IRQF_SHARED|IRQF_TRIGGER_FALLING,
 		"GPIO SW INT",
 		THIS_MODULE->name)<0) printk("request_irq failed");
