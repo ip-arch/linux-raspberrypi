@@ -4,8 +4,6 @@ BUILD=$(PKGWD)/linux/usr/src/linux
 BUILD_REL=../linux/usr/src/linux
 M=`pwd`
 CC=$(CROSS_COMPILE)gcc
-MULTIARCH = $(GNU_ARCH)-linux-gnu$(EABI)
-
 
 clean:
 	rm -rf ./.[a-z]* *.ko *.mod.c *.o *.mod modules.order Module.symvers *~ *.exe

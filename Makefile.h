@@ -143,6 +143,7 @@ endif
 ifeq ($(OS), almalinux)
 DEPEND := $(LINUX_LIBC) $(LINUX_LIBCDEV) $(LINUX_LINUX_LIBCDEV)
 SYSROOT := $(BUILD_DIR)
+MULTIARCH = $(GNU_ARCH)-linux-gnu$(EABI)
 CFLAGS  += --sysroot=$(SYSROOT) \
 	   -B$(SYSROOT)/usr/lib/$(MULTIARCH) \
 	   -B$(SYSROOT)/lib/$(MULTIARCH) \
