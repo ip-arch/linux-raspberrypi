@@ -1,0 +1,8 @@
+If you want to build your own version from this downloaded copy, make
+sure that you have the Python development source installed first!
+
+To install the module:
+
+$ sudo python setup.py install
+  or
+$ sudo python3 setup.py install
