@@ -30,9 +30,9 @@ static int my_init(struct platform_device *pdev)
 
 	pr_info("Hello timer\n");
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
     gpiod_set_value(gpio_led, led);
     timer_setup(&timer_x, timer_timeout, 0);

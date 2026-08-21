@@ -7,6 +7,7 @@
 //#include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/fs.h>
+#include <linux/time.h>
 #include <asm/uaccess.h>
 #include <linux/of.h>
 #include <linux/mod_devicetable.h>
@@ -19,6 +20,8 @@ static int advance = 100;
 
 struct timer_list timer_x;
 int led = 0;
+
+void timer_timeout(struct timer_list *tm);
 
 void timer_timeout(struct timer_list *tm)
 {
@@ -48,20 +51,20 @@ static dev_t dev0;
 static ssize_t led_read(struct file *f, char __user *buf, size_t
   len, loff_t *off)
 {
-printk("buf = %px",buf);
-  copy_to_user(buf, (void*)&advance, (len>4)?4:len);
+  size_t n = (len > 4)? 4 : len;
+  int remain=copy_to_user(buf, (void*)&advance, n);
   del_timer(&timer_x);
   add_timer(&timer_x);
-  return (len>4)?4:len;
+  return n - remain;
 }
 static ssize_t led_write(struct file *f, const char __user *buf,
   size_t len, loff_t *off)
 {
-printk("buf = %px",buf);
-  copy_from_user((void*)&advance, buf, (len>4)?4:len);
+  size_t n = (len > 4)? 4 : len;
+  int remain=copy_from_user((void*)&advance, buf, n);
   del_timer(&timer_x);
   add_timer(&timer_x);
-  return (len>4)?4:len;
+  return n - remain;
 }
 
 static struct file_operations LED_fops =
@@ -73,19 +76,18 @@ static struct file_operations LED_fops =
 
 static int my_init(struct platform_device *pdev)
 {
-    int ret;
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
     timer_setup(&timer_x, timer_timeout, 0);
     timer_x.expires = jiffies + msecs_to_jiffies(advance);
     add_timer(&timer_x);
     alloc_chrdev_region(&dev0, 0, 1, "LED");
-    sClass = class_create(THIS_MODULE, "LED");
+    sClass = class_create("LED");
     sDevice = device_create(sClass,NULL,dev0,NULL,"LED");
     cdev_init(&c_dev, &LED_fops);
     cdev_add(&c_dev, dev0, 1);

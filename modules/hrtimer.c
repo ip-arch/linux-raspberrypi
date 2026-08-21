@@ -30,14 +30,13 @@ enum hrtimer_restart timer_timeout(struct hrtimer *timer)
 }
 static int my_init(struct platform_device *pdev)
 {
-    int ret;
     struct device *dev = &pdev->dev;
 
 	pr_info("Hello hrtimer\n");
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
     gpiod_set_value(gpio_led, ledlevel);
 	kt=ktime_set(0,100000000UL);

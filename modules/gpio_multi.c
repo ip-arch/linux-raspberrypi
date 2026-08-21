@@ -23,27 +23,27 @@ static int my_init(struct platform_device *pdev)
     pr_info("My_init start\n");
 
     gpio_disp = devm_gpiod_get_array(dev, "ex_disp", GPIOD_OUT_LOW);
-    if (!gpio_disp) {
+    if (IS_ERR(gpio_disp)) {
         pr_err("Failed to get DISP gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_disp);
     }
 
     gpio_seg = devm_gpiod_get_array(dev, "ex_seg", GPIOD_OUT_LOW);
-    if (!gpio_seg) {
+    if (IS_ERR(gpio_seg)) {
         pr_err("Failed to get SEG gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_seg);
     }
 
     ret = gpiod_set_array_value(2, gpio_disp->desc, gpio_disp->info, &disp);
     if (ret ) {
         pr_err("Failed to set array on DISP %d\n",ret);
-        return -EINVAL;
+        return ret;
     }
     
     ret = gpiod_set_array_value(8, gpio_seg->desc, gpio_seg->info, &seg);
     if (ret ) {
         pr_err("Failed to set array on SEG %d\n",ret);
-        return -EINVAL;
+        return ret;
     }
     
     return 0;

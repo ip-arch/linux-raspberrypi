@@ -24,28 +24,27 @@ static irqreturn_t irq_sw(int irq, void *dev_id) {
 
 static int my_init(struct platform_device *pdev)
 {
-    int ret;
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
 
     gpio_sw = devm_gpiod_get_index(dev, "ex_sw", 0, GPIOD_IN);
-    if (!gpio_sw) {
+    if (IS_ERR(gpio_sw)) {
         pr_err("Failed to get SW gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_sw);
     }
 
 
 	irq = gpiod_to_irq(gpio_sw);
 	if(request_irq(irq,
 		irq_sw,
-		IRQF_SHARED|IRQF_TRIGGER_FALLING,
+		IRQF_TRIGGER_FALLING,
 		"GPIO SW INT",
-		THIS_MODULE->name)<0) printk("request_irq failed");
+		NULL)) printk("request_irq failed");
 	pr_info("Hello GPIO(IRQ=%d) SW1=%d\n",irq, gpiod_get_value(gpio_sw)); 
 	return 0;
 }
@@ -53,8 +52,8 @@ static int my_init(struct platform_device *pdev)
 
 static void my_remove(struct platform_device *pdev)
 {
-    pr_info("Goodbye hGPIO interrupt count=%d\n",count);
-    free_irq(irq, THIS_MODULE->name);
+    pr_info("Goodbye hGPIO interrupt count=%ld\n",count);
+    free_irq(irq, NULL);
     return;
 }
 

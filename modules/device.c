@@ -17,17 +17,17 @@ struct gpio_desc *gpio_led;
 static ssize_t led_read(struct file *f, char __user *buf, size_t
   len, loff_t *off)
 {
-printk("buf = %px",buf);
-  copy_to_user(buf, (void*)&led, (len>4)?4:len);
-  return (len>4)?4:len;
+  size_t n = (len > 4)? 4 : len;
+  int remain=copy_to_user(buf, (void*)&led, n);
+  return n - remain;
 }
 static ssize_t led_write(struct file *f, const char __user *buf,
   size_t len, loff_t *off)
 {
-printk("buf = %px",buf);
-  copy_from_user((void*)&led, buf, (len>4)?4:len);
+  size_t n = (len > 4)? 4 : len;
+  int remain=copy_from_user((void*)&led, buf, n);
   gpiod_set_value(gpio_led,led&1);
-  return (len>4)?4:len;
+  return n - remain;
 }
 
 static struct file_operations LED_fops =
@@ -39,13 +39,12 @@ static struct file_operations LED_fops =
 static int maj;
 static int my_init(struct platform_device *pdev)
 {
-    int ret;
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
     gpiod_set_value(gpio_led, led);
     maj = register_chrdev(0, "device", &LED_fops);

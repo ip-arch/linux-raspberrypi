@@ -21,27 +21,27 @@ static int my_init(struct platform_device *pdev)
 
     pr_info("My_init start\n");
     gpio_led = devm_gpiod_get_array(dev, "ex_led", GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
 
     gpio_sw = devm_gpiod_get_array(dev, "ex_sw", GPIOD_IN);
-    if (!gpio_sw) {
+    if (IS_ERR(gpio_sw)) {
         pr_err("Failed to get SW gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_sw);
     }
 
     gpio_disp = devm_gpiod_get_array(dev, "ex_disp", GPIOD_OUT_LOW);
-    if (!gpio_disp) {
+    if (IS_ERR(gpio_disp)) {
         pr_err("Failed to get DISP gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_disp);
     }
 
     gpio_seg = devm_gpiod_get_array(dev, "ex_seg", GPIOD_OUT_LOW);
-    if (!gpio_seg) {
+    if (IS_ERR(gpio_seg)) {
         pr_err("Failed to get SEG gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_seg);
     }
 
     pr_info("Hello GPIO array.\nLED:%d, SW:%d, DISP:%d, SEG:%d\n", gpio_led->ndescs, gpio_sw->ndescs, gpio_disp->ndescs, gpio_seg->ndescs);

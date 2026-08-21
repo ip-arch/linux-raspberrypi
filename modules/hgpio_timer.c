@@ -48,15 +48,15 @@ static int my_init(struct platform_device *pdev)
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
 
     gpio_sw = devm_gpiod_get_index(dev, "ex_sw", 0, GPIOD_IN);
-    if (!gpio_sw) {
+    if (IS_ERR(gpio_sw)) {
         pr_err("Failed to get SW gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_sw);
     }
 
     timer_setup(&timer_x, timer_timeout, 0);
@@ -74,7 +74,7 @@ static int my_init(struct platform_device *pdev)
 
 static void my_remove(struct platform_device *pdev)
 {
-    pr_info("Goodbye hGPIO_wq interrupt count=%d\n",count);
+    pr_info("Goodbye hGPIO_wq interrupt count=%ld\n",count);
     del_timer(&timer_x);
     return ;
 }

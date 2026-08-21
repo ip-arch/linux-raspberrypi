@@ -49,17 +49,17 @@ static int my_init(struct platform_device *pdev)
     struct device *dev = &pdev->dev;
 
     gpio_led = devm_gpiod_get_index(dev, "ex_led", 0, GPIOD_OUT_LOW);
-    if (!gpio_led) {
+    if (IS_ERR(gpio_led)) {
         pr_err("Failed to get LED gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_led);
     }
 	hrtimer_init(&hrt, CLOCK_MONOTONIC,HRTIMER_MODE_REL);
 	hrt.function = timer_timeout;
 
     gpio_sw = devm_gpiod_get_index(dev, "ex_sw", 0, GPIOD_IN);
-    if (!gpio_sw) {
+    if (IS_ERR(gpio_sw)) {
         pr_err("Failed to get SW gpio descriptor\n");
-        return -EINVAL;
+        return PTR_ERR(gpio_sw);
     }
 
 
