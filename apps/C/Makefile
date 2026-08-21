@@ -7,17 +7,6 @@ RANLIB=$(CROSS_COMPILE)ranlib
 MANDB=$(PKGWD)/share/man_db.conf
 MULTIARCH = $(GNU_ARCH)-linux-gnu$(EABI)
 
-ifeq ($(OS), almalinux)
-CFLAGS  += --sysroot=$(SYSROOT) \
-	   -B$(SYSROOT)/usr/lib/$(MULTIARCH) \
-	   -B$(SYSROOT)/lib/$(MULTIARCH) \
-	   -I$(SYSROOT)/usr/include/$(MULTIARCH) \
-
-LDFLAGS += -L$(SYSROOT)/usr/lib/$(MULTIARCH) \
-           -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(RASPIOS_TARG).so.3
-
-endif
-
 clean:
 	rm -rf *.exe *.o *.s *~ {API,RPI,mem}/*.exe
 

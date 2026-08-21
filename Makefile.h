@@ -143,4 +143,12 @@ endif
 ifeq ($(OS), almalinux)
 DEPEND := $(LINUX_LIBC) $(LINUX_LIBCDEV) $(LINUX_LINUX_LIBCDEV)
 SYSROOT := $(BUILD_DIR)
+CFLAGS  += --sysroot=$(SYSROOT) \
+	   -B$(SYSROOT)/usr/lib/$(MULTIARCH) \
+	   -B$(SYSROOT)/lib/$(MULTIARCH) \
+	   -I$(SYSROOT)/usr/include/$(MULTIARCH) \
+
+LDFLAGS += -L$(SYSROOT)/usr/lib/$(MULTIARCH) \
+           -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(RASPIOS_TARG).so.3
+
 endif
