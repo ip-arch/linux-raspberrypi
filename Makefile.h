@@ -142,7 +142,6 @@ $(TOOLDIR)$(CROSS_COMPILE)gcc:
 	sudo dnf install  gcc-$(GNU_ARCH)-linux-gnu git bc bison flex openssl-devel ncurses-devel
 endif
 
-ifeq ($(OS), almalinux)
 DEPEND := $(LINUX_LIBC) $(LINUX_LIBCDEV) $(LINUX_LINUX_LIBCDEV)
 SYSROOT := $(BUILD_DIR)
 MULTIARCH = $(GNU_ARCH)-linux-gnu$(EABI)
@@ -154,4 +153,3 @@ CFLAGS  += --sysroot=$(SYSROOT) \
 LDFLAGS += -L$(SYSROOT)/usr/lib/$(MULTIARCH) \
            -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(RASPIOS_TARG).so.3
 
-endif
