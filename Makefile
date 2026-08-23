@@ -29,6 +29,7 @@ install_python_dev: $(PYTHON_DEB)
 	  echo "DEB=$${i}" ; \
 	  ar p $(POOL_DIR)/$${i}  data.tar.xz| tar -xJ -C linux ; \
 	done
+	touch $@
 
 
 $(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
@@ -107,12 +108,15 @@ linux/.linux_src: linux/usr/src/linux/.git $(LINUX_COMMIT)
 
 pi5:
 	$(MAKE) RPI=5 pilinux
+	touch $@
 
 pi4:
 	$(MAKE) RPI=4 pilinux
+	touch $@
 
 pi3:
 	$(MAKE) RPI=3 pilinux
+	touch $@
 
 SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
 DOT_CONFIG=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/.config
@@ -137,20 +141,13 @@ exboard.dtbo: dts/exboard.dtso
 	-Ilinux/usr/src/linux/scripts/dtc/include-prefixes  dts/exboard.dtso | \
 	linux/usr/src/linux/scripts/dtc/dtc -O dtb -o exboard.dtbo
 
-pi5-veryclean:
-	$(MAKE) RPI=5 veryclean
-
-pi4-veryclean:
-	$(MAKE) RPI=4 veryclean
-
-pi3-veryclean:
-	$(MAKE) RPI=3 veryclean
-
 veryclean:
 	make clean
 	rm -fr exboard.dtbo
 	rm  -fr $(POOL_DIR) 
 	rm -fr linux
+	rm -f install_python_dev
+	rm -f pi3 pi4 pi5
 clean:
 	(cd modules; make clean)
 	(cd C; make clean)

@@ -6,7 +6,7 @@ M=`pwd`
 CC=$(CROSS_COMPILE)gcc
 
 clean:
-	rm -rf ./.[a-z]* *.ko *.mod.c *.o *.mod modules.order Module.symvers *~ *.exe
+	rm -rf ./\.[\.a-zA-Z]?* *.ko *.mod.c *.o *.mod modules.order Module.symvers *~ *.exe
 
 
 gpio-sim.ko: $(BUILD_REL)/drivers/gpio/gpio-sim.ko
