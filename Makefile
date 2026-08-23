@@ -1,16 +1,17 @@
 include Makefile.h
 
+POOL_DIR := pool
 sbom: $(SBOM_NAME)
 
 $(SBOM_NAME):
-	wget -nc $(SBOM_URL)
+	wget -nc  -P $(POOL_DIR) $(SBOM_URL)
 
 install: 
-	sh scripts/wsl_script.sh
+	make pi4
 	make install_python_dev
 
 $(PYTHON_DEB): $(SBOM_NAME)
-	mkdir -p linux
+	mkdir -p linux $(POOL_DIR)
 	PYVER=python$$(xzcat $< | \
 	jq -r ' .packages[]? | select(.name == "python3") | .externalRefs[]? | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | (.version | split(".")[0:2] | join(".")) ') ; \
 	echo "$${PYVER}" > $(PYTHON_VER) ; \
@@ -20,13 +21,13 @@ $(PYTHON_DEB): $(SBOM_NAME)
 	URL="https://snapshot.debian.org/archive/debian/$${DATE_STAMP}T000000Z/pool/main/p/python3.11/" ; \
 	echo "Downloading from: $${URL}" ; \
 	for f in $$(cat $@); do \
-		wget --no-iri -nc "$${URL}$${f}" ; \
+		wget --no-iri -nc -P $(POOL_DIR) "$${URL}$${f}" ; \
 	done
 
 install_python_dev: $(PYTHON_DEB)
 	for i in $$(cat $<); do \
 	  echo "DEB=$${i}" ; \
-	  ar p $${i}  data.tar.xz| tar -xJ -C linux ; \
+	  ar p $(POOL_DIR)/$${i}  data.tar.xz| tar -xJ -C linux ; \
 	done
 
 
@@ -39,7 +40,7 @@ $(GDBSERVER_FILE):	$(SBOM_NAME)
 	mkdir -p linux
 	xzcat $< |  \
 	jq -r ' .packages[]?  | select(.name == "gdb") | .externalRefs[]?  | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | "gdbserver_\(.version)_\(.arch).deb" ' > $@
-	wget -nc \
+	wget -nc -P $(POOL_DIR) \
 	    "https://ftp.debian.org/debian/pool/main/g/gdb/$$(cat $@)"
 
 $(LINUXVER_FILE): $(LINUX_HEADER_PACKAGE_FILE)
@@ -51,16 +52,16 @@ $(LINUX_LIBC):  $(LINUXVER_FILE)
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p $(POOL_DIR)/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
 
 $(LINUX_LIBCDEV):  $(LINUXVER_FILE)
 	mkdir -p linux
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6-dev") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p $(POOL_DIR)/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
 
 
 $(LINUX_LINUX_LIBCDEV):  $(LINUXVER_FILE)
@@ -68,18 +69,18 @@ $(LINUX_LINUX_LIBCDEV):  $(LINUXVER_FILE)
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "linux-libc-dev") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-libc-dev_$${VER_CLEAN}_all.deb ; \
-	ar p linux-libc-dev_$${VER_CLEAN}_all.deb data.tar.xz| tar -xJ -C linux ;
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-libc-dev_$${VER_CLEAN}_all.deb ; \
+	ar p $(POOL_DIR)/linux-libc-dev_$${VER_CLEAN}_all.deb data.tar.xz| tar -xJ -C linux ;
 
 $(LINUX_HEADERNAME):  $(LINUXVER_FILE)
 	mkdir -p linux
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.xz| tar -xJ -C linux ;\
-	wget -nc https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb ;\
-	ar p linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb data.tar.xz | tar -xJ -C linux
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
+	ar p $(POOL_DIR)/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.xz| tar -xJ -C linux ;\
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb ;\
+	ar p $(POOL_DIR)/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb data.tar.xz | tar -xJ -C linux
 	
 
 $(LINUX_COMMIT): $(LINUX_HEADERNAME)
@@ -121,7 +122,7 @@ pilinux: $(DEPEND) $(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADER
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux
 	( cd linux/usr/src/linux ;\
-	KERNEL=$(KERNEL_NAME) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) make oldconfig prepare modules_prepare; \
+	KERNEL=$(KERNEL_NAME) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) make olddefconfig prepare modules_prepare; \
 	)
 	make RPI=$(RPI) SBOM_URL=$(SBOM_URL) $(BUILD_CONFIG)
 	make exboard.dtbo
@@ -148,13 +149,12 @@ pi3-veryclean:
 veryclean:
 	make clean
 	rm -fr exboard.dtbo
-	rm  -f $(SBOM_NAME) linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$(shell cat $(LINUX_HEADERNAME))_$(RASPIOS_TARG).deb linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$(shell cat $(LINUX_HEADERNAME))_all.deb
-	rm -f $(GDBSERVER_FILE) $(LINUX_LINUX_LIBCDEV) $(LINUX_LIBCDEV) $(LINUX_LIBC)
+	rm  -fr $(POOL_DIR) 
 	rm -fr linux
 clean:
 	(cd modules; make clean)
-	(cd apps/C; make clean)
-	(cd apps/Python; make clean)
+	(cd C; make clean)
+	(cd Python; make clean)
 
 ################################
 # suffix rules

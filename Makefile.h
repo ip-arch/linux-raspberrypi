@@ -65,7 +65,7 @@ RPI_SUFFIX_3 = v7
 RPI_SUFFIX_2 = v6
 ARCH_SUFFIX = $(RPI_SUFFIX_$(RPI))
 
-SBOM_NAME = $(shell basename $(SBOM_URL))
+SBOM_NAME = pool/$(shell basename $(SBOM_URL))
 LINUX_HEADER_PACKAGE_FILE=linux/.header_package
 LINUXVER_FILE=linux/.linux_ver
 LINUX_LIBCDEV=linux/.libc6_dev
