@@ -7,6 +7,28 @@ $(SBOM_NAME):
 
 install: 
 	sh scripts/wsl_script.sh
+	make install_python_dev
+
+$(PYTHON_DEB): $(SBOM_NAME)
+	mkdir -p linux
+	PYVER=python$$(xzcat $< | \
+	jq -r ' .packages[]? | select(.name == "python3") | .externalRefs[]? | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | (.version | split(".")[0:2] | join(".")) ') ; \
+	echo "$${PYVER}" > $(PYTHON_VER) ; \
+	xzcat $< | \
+	jq -r --arg pyver "$${PYVER}" ' .packages[]? | select(.name == $$pyver) | .externalRefs[]? | select(.referenceType == "purl") | .referenceLocator | capture("@(?<version>[^?]+)\\?arch=(?<arch>[^&]+)") | .version |= gsub("%2B"; "+") | "\($$pyver)-dev_\(.version)_\(.arch).deb", "lib\($$pyver)-dev_\(.version)_\(.arch).deb", "lib\($$pyver)-minimal_\(.version)_\(.arch).deb"' > $@ ; \
+	DATE_STAMP=$$(echo "$<" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | tr -d '-') ; \
+	URL="https://snapshot.debian.org/archive/debian/$${DATE_STAMP}T000000Z/pool/main/p/python3.11/" ; \
+	echo "Downloading from: $${URL}" ; \
+	for f in $$(cat $@); do \
+		wget --no-iri -nc "$${URL}$${f}" ; \
+	done
+
+install_python_dev: $(PYTHON_DEB)
+	for i in $$(cat $<); do \
+	  echo "DEB=$${i}" ; \
+	  ar p $${i}  data.tar.xz| tar -xJ -C linux ; \
+	done
+
 
 $(LINUX_HEADER_PACKAGE_FILE):  $(SBOM_NAME)
 	mkdir -p linux

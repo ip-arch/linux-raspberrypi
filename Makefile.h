@@ -74,6 +74,8 @@ LINUX_LINUX_LIBCDEV=linux/.linux_libc_dev
 LINUX_HEADERNAME=linux/.headername
 LINUX_COMMIT=linux/.commit
 GDBSERVER_FILE=linux/.gdbserver
+PYTHON_VER=linux/.python_ver
+PYTHON_DEB=linux/.python_deb
 
 
 ifeq ($(RPI), 5)
