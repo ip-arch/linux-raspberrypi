@@ -7,8 +7,8 @@ $(SBOM_NAME):
 	wget -nc  -P $(POOL_DIR) $(SBOM_URL)
 
 install: 
-	make pi4
-	make install_python_dev
+	$(MAKE) RPI=$(RPI) pilinux
+	$(MAKE) install_python_dev
 
 $(PYTHON_DEB): $(SBOM_NAME)
 	mkdir -p linux $(POOL_DIR)
@@ -107,15 +107,15 @@ linux/.linux_src: linux/usr/src/linux/.git $(LINUX_COMMIT)
 
 
 pi5:
-	$(MAKE) RPI=5 pilinux
+	$(MAKE) RPI=5  FROM_PI_TARGET=1 install
 	touch $@
 
 pi4:
-	$(MAKE) RPI=4 pilinux
+	$(MAKE) RPI=4  FROM_PI_TARGET=1 install
 	touch $@
 
 pi3:
-	$(MAKE) RPI=3 pilinux
+	$(MAKE) RPI=3  FROM_PI_TARGET=1 install
 	touch $@
 
 SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
@@ -126,12 +126,13 @@ pilinux: $(DEPEND) $(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADER
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux
 	( cd linux/usr/src/linux ;\
-	KERNEL=$(KERNEL_NAME) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) make olddefconfig prepare modules_prepare; \
+	KERNEL=$(KERNEL_NAME) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) $(MAKE) olddefconfig prepare modules_prepare; \
 	)
-	make RPI=$(RPI) SBOM_URL=$(SBOM_URL) $(BUILD_CONFIG)
-	make exboard.dtbo
+	$(MAKE) RPI=$(RPI) SBOM_URL=$(SBOM_URL) $(BUILD_CONFIG)
+	$(MAKE) exboard.dtbo
 
 $(BUILD_CONFIG):
+	mkdir -p $(BUILD_DIR)
 	echo "BUILT_RPI := $(RPI)" > $(BUILD_CONFIG)
 	echo "BUILT_SBOM_URL := $(SBOM_URL)" >> $(BUILD_CONFIG)
 
@@ -142,16 +143,16 @@ exboard.dtbo: dts/exboard.dtso
 	linux/usr/src/linux/scripts/dtc/dtc -O dtb -o exboard.dtbo
 
 veryclean:
-	make clean
+	$(MAKE) clean
 	rm -fr exboard.dtbo
 	rm  -fr $(POOL_DIR) 
 	rm -fr linux
 	rm -f install_python_dev
 	rm -f pi3 pi4 pi5
 clean:
-	(cd modules; make clean)
-	(cd C; make clean)
-	(cd Python; make clean)
+	(cd modules; $(MAKE) clean)
+	(cd C; $(MAKE) clean)
+	(cd Python; $(MAKE) clean)
 
 ################################
 # suffix rules

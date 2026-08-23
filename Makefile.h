@@ -41,9 +41,11 @@ endif
 # pilinux系（linux/を作り直す）ターゲットの実行時はチェックしない
 CONFIG_CHECK_SKIP_GOALS := pilinux pi3 pi4 pi5 veryclean
 ifeq ($(filter $(CONFIG_CHECK_SKIP_GOALS),$(MAKECMDGOALS)),)
+ifndef FROM_PI_TARGET
 ifdef BUILT_RPI
 ifneq ($(RPI),$(BUILT_RPI))
 $(error linux/ は RPI=$(BUILT_RPI) でビルドされています。RPI=$(RPI) を使う場合は先に 'make RPI=$(RPI) pilinux' を実行してください（意図的に混在させる場合は ALLOW_RPI_MISMATCH=1 を指定）)
+endif
 endif
 ifdef SBOM_URL
 ifneq ($(SBOM_URL),$(BUILT_SBOM_URL))
