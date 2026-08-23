@@ -27,7 +27,10 @@
 
 #include <Python.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <linux/gpio.h>
 
@@ -308,6 +311,166 @@ static PyObject *py_read_event(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 /* ---------------------------------------------------------------
+ * dt_read_gpio_cells(path, ngpio_cells=2)
+ *   -> [(phandle, cell0, cell1, ...), ...]
+ *
+ * Device Treeの "*-gpios" 型プロパティ(<phandle, pin, flags>の
+ * 繰り返し、ビッグエンディアンu32)を読む。ABI依存の要素が無い
+ * 単純なバイナリなので、これはexboard.dtsoのような独自ノードの
+ * *-gpiosを解釈するための汎用ヘルパー(GPIO chardevのioctlとは無関係)。
+ * --------------------------------------------------------------- */
+static PyObject *py_dt_read_gpio_cells(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    const char *path;
+    unsigned int ngpio_cells = 2;
+    static char *kwlist[] = {"path", "ngpio_cells", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|I", kwlist, &path, &ngpio_cells))
+        return NULL;
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        PyErr_SetFromErrnoWithFilename(PyExc_OSError, path);
+        return NULL;
+    }
+
+    unsigned int n_u32 = 1 + ngpio_cells; /* phandle + gpio-specifier cells */
+    uint32_t *buf = malloc(n_u32 * sizeof(uint32_t));
+    if (!buf) {
+        fclose(f);
+        return PyErr_NoMemory();
+    }
+
+    PyObject *result = PyList_New(0);
+    if (!result) {
+        free(buf);
+        fclose(f);
+        return NULL;
+    }
+
+    while (fread(buf, sizeof(uint32_t), n_u32, f) == n_u32) {
+        PyObject *tup = PyTuple_New(n_u32);
+        if (!tup)
+            goto error;
+
+        for (unsigned int i = 0; i < n_u32; i++) {
+            PyObject *item = PyLong_FromUnsignedLong(ntohl(buf[i]));
+            if (!item) {
+                Py_DECREF(tup);
+                goto error;
+            }
+            PyTuple_SET_ITEM(tup, i, item); /* steals reference */
+        }
+
+        if (PyList_Append(result, tup) < 0) {
+            Py_DECREF(tup);
+            goto error;
+        }
+        Py_DECREF(tup);
+    }
+
+    if (ferror(f)) {
+        PyErr_SetFromErrnoWithFilename(PyExc_OSError, path);
+        goto error;
+    }
+
+    free(buf);
+    fclose(f);
+    return result;
+
+error:
+    free(buf);
+    fclose(f);
+    Py_DECREF(result);
+    return NULL;
+}
+
+/* ---------------------------------------------------------------
+ * dt_read_line_names(path) -> [str, ...]
+ *
+ * gpio-line-names のようなNUL区切り文字列配列プロパティを読む。
+ * --------------------------------------------------------------- */
+static PyObject *py_dt_read_line_names(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    const char *path;
+    static char *kwlist[] = {"path", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &path))
+        return NULL;
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        PyErr_SetFromErrnoWithFilename(PyExc_OSError, path);
+        return NULL;
+    }
+
+    char stackbuf[4096];
+    char *buf = stackbuf;
+    size_t bufsize = sizeof(stackbuf);
+    size_t len = 0;
+    int heap_allocated = 0;
+
+    for (;;) {
+        len += fread(buf + len, 1, bufsize - len - 1, f);
+        if (len < bufsize - 1)
+            break; /* 読みきった(EOF) */
+
+        /* バッファが足りなかった場合はヒープに拡張して続行 */
+        size_t newsize = bufsize * 2;
+        char *newbuf = malloc(newsize);
+        if (!newbuf) {
+            if (heap_allocated)
+                free(buf);
+            fclose(f);
+            return PyErr_NoMemory();
+        }
+        memcpy(newbuf, buf, len);
+        if (heap_allocated)
+            free(buf);
+        buf = newbuf;
+        bufsize = newsize;
+        heap_allocated = 1;
+    }
+    fclose(f);
+    buf[len] = '\0';
+
+    PyObject *result = PyList_New(0);
+    if (!result) {
+        if (heap_allocated)
+            free(buf);
+        return NULL;
+    }
+
+    size_t pos = 0;
+    while (pos < len) {
+        const char *s = buf + pos;
+        size_t slen = strnlen(s, len - pos);
+        if (slen > 0) {
+            PyObject *pystr = PyUnicode_FromStringAndSize(s, slen);
+            if (!pystr) {
+                Py_DECREF(result);
+                if (heap_allocated)
+                    free(buf);
+                return NULL;
+            }
+            if (PyList_Append(result, pystr) < 0) {
+                Py_DECREF(pystr);
+                Py_DECREF(result);
+                if (heap_allocated)
+                    free(buf);
+                return NULL;
+            }
+            Py_DECREF(pystr);
+        }
+        pos += slen + 1;
+    }
+
+    if (heap_allocated)
+        free(buf);
+    return result;
+}
+
+/* ---------------------------------------------------------------
  * モジュール定義
  * --------------------------------------------------------------- */
 static const char moduledocstring[] =
@@ -333,6 +496,12 @@ static PyMethodDef PyGpio_methods[] = {
      "set_values(line_fd, bits, mask) -> None"},
     {"read_event", (PyCFunction)py_read_event, METH_VARARGS | METH_KEYWORDS,
      "read_event(line_fd) -> (timestamp_ns, id, offset, seqno, line_seqno)"},
+    {"dt_read_gpio_cells", (PyCFunction)py_dt_read_gpio_cells, METH_VARARGS | METH_KEYWORDS,
+     "dt_read_gpio_cells(path, ngpio_cells=2) -> [(phandle, cell0, cell1, ...), ...]\n"
+     "Reads a DT '*-gpios' style property (big-endian u32 cells)."},
+    {"dt_read_line_names", (PyCFunction)py_dt_read_line_names, METH_VARARGS | METH_KEYWORDS,
+     "dt_read_line_names(path) -> [str, ...]\n"
+     "Reads a NUL-separated DT string-list property (e.g. gpio-line-names)."},
     {NULL, NULL, 0, NULL}
 };
 
