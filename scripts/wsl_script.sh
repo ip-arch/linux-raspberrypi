@@ -17,7 +17,7 @@ if grep -qi microsoft /proc/version; then
     cp setup/* /mnt/c/linux_rpi_setup
 fi
 # Linuxカーネルを取得し、ラズパイのカーネル開発環境作成
-make pi4
+make install
 # 確認用 timer.ko 作成
 cd modules; make timer.ko
 
