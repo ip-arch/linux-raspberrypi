@@ -15,8 +15,8 @@ Raspberry Pi 4とRaspberry Pi 3をサポートします。
 SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2025-05-13/2025-05-13-raspios-bookworm-armhf-lite.sbom.xz
   2. make pi4 もしくは make pi3で、 必要なツール群とLinuxカーネルをダウンロードし、カーネルモジュール開発環境を整えます。
      make pi5も作成していますが、実行環境がないため、動作未確認です。(pi5は64bitカーネルでしか動作しません)
-  3. make pi4-verycleanもしくはpi3-verycleanで、上記コマンドで生成したファイル群を消します。
+  3. make verycleanで、上記コマンドで生成したファイル群を消します。
 2. linux/usr/src/linux配下にLinuxカーネルソースコードが展開されます。
 3. modules配下にカーネルモジュールサンプルプログラム群が展開されます。
-4. apps/Cとapps/Python配下にはCとPythonのアプリケーション関係のファイルが展開されます。 
+4. CとPython配下にはCとPythonのアプリケーション関係のファイルが展開されます。 
 5. setup下にRaspberry Pi Imagerで書き込んだbootfsに置くファイルがあります。32bitカーネル、Windows ICSとの接続のためのIP固定、sshで動作させるヘッドレスを実現します。 セミナー用に、ユーザー名とパスワードを固定しているので、実システムで運用する場合には、userconf.txtは置き換えてください。
