@@ -116,9 +116,6 @@ PyMODINIT_FUNC initpyfoo(void)
       return;
 #endif
 
-   if (!PyEval_ThreadsInitialized())
-      PyEval_InitThreads();
-
 #if PY_MAJOR_VERSION > 2
    return module;
 #else

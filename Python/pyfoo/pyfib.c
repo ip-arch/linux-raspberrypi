@@ -50,7 +50,7 @@ static PyMethodDef pyfib_methods[] = {
 };
 
 #if PY_MAJOR_VERSION > 2
-static struct PyModuleDef pyfib = {
+static struct PyModuleDef pyfibmodule = {
    PyModuleDef_HEAD_INIT,
    "pyfib",       // name of module
    moduledocstring,  // module documentation, may be NULL
@@ -76,9 +76,6 @@ PyMODINIT_FUNC initpyfib(void)
    if ((module = Py_InitModule("pyfib", pyfib_methods)) == NULL)
       return;
 #endif
-
-   if (!PyEval_ThreadsInitialized())
-      PyEval_InitThreads();
 
 #if PY_MAJOR_VERSION > 2
    return module;

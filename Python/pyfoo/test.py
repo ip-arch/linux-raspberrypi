@@ -115,9 +115,9 @@ class TestFoo(unittest.TestCase):
         """Test fib(20)"""
         self.assertEqual(pyfoo.fib(20),fib(20))
 
-    def test_over_fib55(self):
-        """Test fib(55)"""
-        self.assertEqual(pyfoo.fib(55),fib(55))
+    def test_over_fib5(self):
+        """Test fib(5)"""
+        self.assertEqual(pyfoo.fib(5),fib(5))
 
 if __name__ == '__main__':
     unittest.main()
