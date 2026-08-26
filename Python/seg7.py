@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Naohiko Shimizu <nshimizu@ip-arch.jp>
+
 num2seg = {
 	0:("a","b","c","d","e","f"),
 	1:("b","c"),

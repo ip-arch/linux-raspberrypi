@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Naohiko Shimizu <nshimizu@ip-arch.jp>
+
 """
 exboard_blink_epoll_pygpio.py
 
