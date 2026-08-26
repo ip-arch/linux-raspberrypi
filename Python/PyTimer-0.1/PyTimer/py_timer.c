@@ -5,26 +5,38 @@
 
 #define PYTIMER
 
+#define TIME_T_32
+#undef  USE_MUTEX
+
+#if defined(TIME_T_32)
+#define U_TIMER_T	unsigned int
+#else
+#define U_TIMER_T	timer_t
+#endif
 #include "Python.h"
 #include "constants.h"
 #include <time.h>
 #include <errno.h>
+#if defined(USE_MUTEX)
 #include <pthread.h>
+#endif
 
 static unsigned int timercount = 1;
 
 struct py_callback
 {
-   unsigned timerid;
+   int timerid;
    PyObject *py_cb;
    struct py_callback *next;
 };
 static struct py_callback *py_callbacks = NULL;
+#if defined(USE_MUTEX)
 pthread_mutex_t mutex;
+#endif
 
 struct py_timer
 {
-    timer_t  timerid;
+    U_TIMER_T  timerid;
     unsigned int timercount;
     struct sigevent *sevp;
     struct py_timer *next;
@@ -71,7 +83,9 @@ static int add_py_callback(unsigned timerid, struct sigevent *sevp, PyObject *cb
    Py_XINCREF(cb_func);         // Add a reference to new callback
    new_py_cb->timerid = timerid;
    new_py_cb->next = NULL;
+#if defined(USE_MUTEX)
    pthread_mutex_lock(&mutex);
+#endif
    if (py_callbacks == NULL) {
       py_callbacks = new_py_cb;
    } else {
@@ -80,7 +94,9 @@ static int add_py_callback(unsigned timerid, struct sigevent *sevp, PyObject *cb
          cb = cb->next;
       cb->next = new_py_cb;
    }
+#if defined(USE_MUTEX)
    pthread_mutex_unlock(&mutex);
+#endif
    sevp->sigev_notify_function = run_py_callbacks;
    sevp->sigev_value.sival_int = timerid;
    sevp->sigev_notify = SIGEV_THREAD;
@@ -92,7 +108,7 @@ static PyObject *py_create(PyObject *self, PyObject *args, PyObject *kwargs)
 {
    struct sigevent *sevp = NULL;
    struct py_timer *newtimer;
-   timer_t  timerid;
+   U_TIMER_T  timerid;
    int clockid;
    PyObject *cb_func = NULL;
 
@@ -108,6 +124,11 @@ static PyObject *py_create(PyObject *self, PyObject *args, PyObject *kwargs)
    }
 
    sevp = (struct sigevent*)malloc(sizeof(struct sigevent));
+   if (sevp == NULL)
+   {
+      PyErr_NoMemory();
+      return NULL;
+   }
    memset(sevp, 0, sizeof(struct sigevent));
    sevp->sigev_notify = SIGEV_NONE;
 
@@ -139,6 +160,11 @@ static PyObject *py_create(PyObject *self, PyObject *args, PyObject *kwargs)
       return NULL;
    }
    newtimer = (struct py_timer*)malloc(sizeof(struct py_timer));
+   if (newtimer == NULL)
+   {
+      PyErr_NoMemory();
+      return NULL;
+   }
    newtimer->timerid = timerid;
    newtimer->timercount = timercount;
    newtimer->sevp = sevp;
@@ -150,13 +176,12 @@ static PyObject *py_create(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 // python function delete(timerid)
-static PyObject *py_delete(PyObject *self, PyObject *args, PyObject *kwargs)
+static PyObject *py_delete(PyObject *self, PyObject *args)
 {
    unsigned int timerid;
    struct py_timer *ct = pytimers, **oct = &pytimers;
-   static char *kwlist[] = {"timerid", NULL};
 
-   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &timerid))
+   if (!PyArg_ParseTuple(args, "i", &timerid))
       return NULL;
 
    while(ct)
@@ -181,16 +206,14 @@ static PyObject *py_delete(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 // python function gettime(timerid)
-static PyObject *py_gettime(PyObject *self, PyObject *args, PyObject *kwargs)
+static PyObject *py_gettime(PyObject *self, PyObject *args)
 {
    double curtime, curinterval;
-   unsigned int timerraw;
    unsigned int timerid;
    struct itimerspec itm;
    struct py_timer *ct = pytimers;
-   static char *kwlist[] = {"timerid", NULL};
 
-   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i", kwlist, &timerid))
+   if (!PyArg_ParseTuple(args, "i", &timerid))
       return NULL;
    while(ct)
    {
@@ -256,8 +279,8 @@ static PyObject *py_settime(PyObject *self, PyObject *args)
 static const char moduledocstring[] = "Posix interval timer functions";
 
 static PyMethodDef PyTimer_methods[] = {
-   {"create", (PyCFunction)py_create, METH_VARARGS | METH_KEYWORDS, "Create a timer module\nclockid        - type of the clock\n[callback]    - callback function\n"},
-   {"settime", (PyCFunction)py_settime, METH_VARARGS | METH_KEYWORDS, "\nTimerId - TimerId from create\nStart time - First occurence of timer event in floating point number\nIteration period - interval time in floating point number"},
+   {"create", (PyCFunction)(void(*)(void))py_create, METH_VARARGS | METH_KEYWORDS, "Create a timer module\nclockid        - type of the clock\n[callback]    - callback function\n"},
+   {"settime", (PyCFunction)py_settime, METH_VARARGS, "\nTimerId - TimerId from create\nStart time - First occurence of timer event in floating point number\nIteration period - interval time in floating point number"},
    {"gettime", (PyCFunction)py_gettime, METH_VARARGS, "Get the current timer value in tuple (remain, interval)\nTimerId - Timer id"},
    {"delete", (PyCFunction)py_delete, METH_VARARGS, "Delete the timer\nTimerId - timer id"},
    {NULL, NULL, 0, NULL}
@@ -293,9 +316,6 @@ PyMODINIT_FUNC initPyTimer(void)
 
    define_constants(module);
 
-
-   if (!PyEval_ThreadsInitialized())
-      PyEval_InitThreads();
 
 #if PY_MAJOR_VERSION > 2
    return module;

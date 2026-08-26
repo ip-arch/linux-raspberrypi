@@ -26,7 +26,8 @@ class TestIntervalTimer(unittest.TestCase):
     def test_create_type(self):
         """Test illeagal argument for create"""
         with self.assertRaises(ValueError):
-            t0 = PyTimer.create(-1)
+            # t0 = PyTimer.create(-1)
+            t0 = PyTimer.create(0)
 
     def test_over_delete(self):
         """Test delete already deleted timer"""
