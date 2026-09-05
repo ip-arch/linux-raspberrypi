@@ -72,12 +72,14 @@ LINUX_HEADER_PACKAGE_FILE=linux/.header_package
 LINUXVER_FILE=linux/.linux_ver
 LINUX_LIBCDEV=linux/.libc6_dev
 LINUX_LIBC=linux/.libc6
+LINUX_LIB=linux/.usrmerge-compat
 LINUX_LINUX_LIBCDEV=linux/.linux_libc_dev
 LINUX_HEADERNAME=linux/.headername
 LINUX_COMMIT=linux/.commit
 GDBSERVER_FILE=linux/.gdbserver
 PYTHON_VER=linux/.python_ver
 PYTHON_DEB=linux/.python_deb
+INSTALL_TOOLS=linux/.install-tools
 
 
 ifeq ($(RPI), 5)

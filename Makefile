@@ -6,8 +6,22 @@ sbom: $(SBOM_NAME)
 $(SBOM_NAME):
 	wget -nc  -P $(POOL_DIR) $(SBOM_URL)
 
-install: 
+ifneq (,$(filter ubuntu debian,$(OS)))
+$(INSTALL_TOOLS):
+	mkdir -p linux
 	sudo apt install wget sudo git build-essential crossbuild-essential-$(DEBIAN_ARCH) jq xz-utils bison flex bc universal-ctags vim file -y
+	touch $@
+else ifeq ($(OS),Cygwin)
+	mkdir -p linux
+	apt-cyg install jq xz -y
+	touch $@
+else
+$(INSTALL_TOOLS):
+	mkdir -p linux
+	sudo dnf install  gcc-$(GNU_ARCH)-linux-gnu git bc bison flex openssl-devel ncurses-devel
+	touch $@
+endif
+install: $(INSTALL_TOOLS) 
 	$(MAKE) RPI=$(RPI) pilinux
 	$(MAKE) install_python_dev
 
@@ -56,6 +70,10 @@ $(LINUX_LIBC):  $(LINUXVER_FILE)
 	echo $$VER_CLEAN > $@ ; \
 	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(DEBIAN_ARCH).deb ; \
 	ar p $(POOL_DIR)/libc6_$${VER_CLEAN}_$(DEBIAN_ARCH).deb data.tar.gz| tar -xz -C linux ;
+
+$(LINUX_LIB): $(LINUX_LIBC) $(LINUX_LIBCDEV)
+	[ -e linux/lib ] || ln -s usr/lib linux/lib
+	touch $@
 
 $(LINUX_LIBCDEV):  $(LINUXVER_FILE)
 	mkdir -p linux
@@ -122,7 +140,7 @@ pi3:
 SYMVERS=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/Module.symvers
 DOT_CONFIG=linux/usr/src/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)/.config
 
-pilinux: $(DEPEND) $(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME) $(GDBSERVER_FILE)
+pilinux: $(DEPEND)  $(LINUX_LIB) $(TOOLDIR)$(CROSS_COMPILE)gcc linux/.linux_src $(LINUX_HEADERNAME) $(GDBSERVER_FILE)
 	echo OS=$(OS) $(SYMVERS) $(DOT_CONFIG) DEPEND=$(DEPEND)
 	cp $(SYMVERS) linux/usr/src/linux
 	cp $(DOT_CONFIG) linux/usr/src/linux
