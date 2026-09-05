@@ -82,11 +82,11 @@ PYTHON_DEB=linux/.python_deb
 
 ifeq ($(RPI), 5)
 KERNEL_ARCH_BIT=64
-RASPIOS_TARG = arm64
+DEBIAN_ARCH = arm64
 KERNEL_NAME=kernel_$(ARCH_SUFFIX)
 else
 KERNEL_ARCH_BIT=32
-RASPIOS_TARG = armhf
+DEBIAN_ARCH = armhf
 KERNEL_NAME=kernel$(ARCH_SUFFIX)
 endif
 
@@ -100,9 +100,9 @@ GNU_ARCH=arm
 EABI=eabihf
 endif
 
-ifneq (,$(findstring $(RASPIOS_TARG),$(SBOM_URL)))
+ifneq (,$(findstring $(DEBIAN_ARCH),$(SBOM_URL)))
 else
-$(error SBOM_URL ($(SBOM_URL)) does not look like a $(RASPIOS_TARG) image for RPI=$(RPI) — update SBOM_URL in Makefile.h)
+$(error SBOM_URL ($(SBOM_URL)) does not look like a $(DEBIAN_ARCH) image for RPI=$(RPI) — update SBOM_URL in Makefile.h)
 endif
 
 SYS=$(shell uname -o)
@@ -153,5 +153,5 @@ CFLAGS  += --sysroot=$(SYSROOT) \
 	   -I$(SYSROOT)/usr/include/$(MULTIARCH) \
 
 LDFLAGS += -L$(SYSROOT)/usr/lib/$(MULTIARCH) \
-           -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(RASPIOS_TARG).so.3
+           -Wl,-dynamic-linker=/lib/$(MULTIARCH)/ld-linux-$(DEBIAN_ARCH).so.3
 

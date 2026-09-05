@@ -7,6 +7,7 @@ $(SBOM_NAME):
 	wget -nc  -P $(POOL_DIR) $(SBOM_URL)
 
 install: 
+	sudo apt install wget sudo git build-essential crossbuild-essential-$(DEBIAN_ARCH) jq xz-utils bison flex bc universal-ctags vim file -y
 	$(MAKE) RPI=$(RPI) pilinux
 	$(MAKE) install_python_dev
 
@@ -53,16 +54,16 @@ $(LINUX_LIBC):  $(LINUXVER_FILE)
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p $(POOL_DIR)/libc6_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6_$${VER_CLEAN}_$(DEBIAN_ARCH).deb ; \
+	ar p $(POOL_DIR)/libc6_$${VER_CLEAN}_$(DEBIAN_ARCH).deb data.tar.gz| tar -xz -C linux ;
 
 $(LINUX_LIBCDEV):  $(LINUXVER_FILE)
 	mkdir -p linux
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "libc6-dev") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p $(POOL_DIR)/libc6-dev_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.gz| tar -xz -C linux ;
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/g/glibc/libc6-dev_$${VER_CLEAN}_$(DEBIAN_ARCH).deb ; \
+	ar p $(POOL_DIR)/libc6-dev_$${VER_CLEAN}_$(DEBIAN_ARCH).deb data.tar.gz| tar -xz -C linux ;
 
 
 $(LINUX_LINUX_LIBCDEV):  $(LINUXVER_FILE)
@@ -78,8 +79,8 @@ $(LINUX_HEADERNAME):  $(LINUXVER_FILE)
 	VER=$$(xz -dc $(SBOM_NAME) | jq -r '.packages[]? | select(.name == "linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi") | .versionInfo') ;\
 	VER_CLEAN=$${VER#*:} ;\
 	echo $$VER_CLEAN > $@ ; \
-	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb ; \
-	ar p $(POOL_DIR)/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(RASPIOS_TARG).deb data.tar.xz| tar -xJ -C linux ;\
+	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(DEBIAN_ARCH).deb ; \
+	ar p $(POOL_DIR)/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-rpi-$(ARCH_SUFFIX)_$${VER_CLEAN}_$(DEBIAN_ARCH).deb data.tar.xz| tar -xJ -C linux ;\
 	wget -nc -P $(POOL_DIR) https://archive.raspberrypi.org/debian/pool/main/l/linux/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb ;\
 	ar p $(POOL_DIR)/linux-headers-$(shell cat $(LINUXVER_FILE))+rpt-common-rpi_$${VER_CLEAN}_all.deb data.tar.xz | tar -xJ -C linux
 	

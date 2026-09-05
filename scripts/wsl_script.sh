@@ -5,7 +5,7 @@ set -eu
 DIR=$HOME
 sudo apt update
 sudo apt upgrade -y
-sudo apt install wget sudo git build-essential crossbuild-essential-armhf jq xz-utils bison flex bc universal-ctags vim file -y
+sudo apt install wget sudo git build-essential jq xz-utils bison flex bc universal-ctags vim file -y
 cd $DIR
 [ -d linux-raspberrypi ] || git clone https://github.com/ip-arch/linux-raspberrypi.git
 cd $DIR/linux-raspberrypi 
