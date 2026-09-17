@@ -9,7 +9,7 @@ $(SBOM_NAME):
 ifneq (,$(filter ubuntu debian,$(OS)))
 $(INSTALL_TOOLS):
 	mkdir -p linux
-	sudo apt install wget sudo git build-essential crossbuild-essential-$(DEBIAN_ARCH) jq xz-utils bison flex bc universal-ctags vim file -y
+	sudo apt install wget sudo git build-essential crossbuild-essential-$(DEBIAN_ARCH) jq xz-utils bison flex bc universal-ctags vim file psmisc netcat-openbsd -y
 	touch $@
 else ifeq ($(OS),Cygwin)
 	mkdir -p linux
@@ -18,7 +18,7 @@ else ifeq ($(OS),Cygwin)
 else
 $(INSTALL_TOOLS):
 	mkdir -p linux
-	sudo dnf install  gcc-$(GNU_ARCH)-linux-gnu git bc bison flex openssl-devel ncurses-devel
+	sudo dnf install -y gcc-$(GNU_ARCH)-linux-gnu git bc bison flex openssl-devel ncurses-devel nmap-ncat psmisc
 	touch $@
 endif
 install: $(INSTALL_TOOLS) 
