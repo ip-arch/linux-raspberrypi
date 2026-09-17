@@ -36,7 +36,7 @@ pthread_mutex_t mutex;
 
 struct py_timer
 {
-    U_TIMER_T  timerid;
+    timer_t  timerid;
     unsigned int timercount;
     struct sigevent *sevp;
     struct py_timer *next;
@@ -67,7 +67,7 @@ static void run_py_callbacks(union sigval timerid)
    }
 }
 
-static int add_py_callback(unsigned timerid, struct sigevent *sevp, PyObject *cb_func)
+static int add_py_callback(int timerid, struct sigevent *sevp, PyObject *cb_func)
 {
    struct py_callback *new_py_cb;
    struct py_callback *cb = py_callbacks;
@@ -108,7 +108,7 @@ static PyObject *py_create(PyObject *self, PyObject *args, PyObject *kwargs)
 {
    struct sigevent *sevp = NULL;
    struct py_timer *newtimer;
-   U_TIMER_T  timerid;
+   timer_t  timerid;
    int clockid;
    PyObject *cb_func = NULL;
 

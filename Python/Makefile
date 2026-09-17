@@ -13,6 +13,9 @@ pygpio.so: PyGPIO/pygpio.c
 	make PyGPIO/$@
 	mv PyGPIO/$@ $@
 
+PyTimer.so: PyTimer-0.1/PyTimer/py_timer.c PyTimer-0.1/PyTimer/constants.c
+	make PyTimer-0.1/PyTimer/py_timer.so ADDFLAGS="PyTimer-0.1/PyTimer/constants.c -o $@"
+
 PYTHON_VER_FILE := ../$(PYTHON_VER)
 
 %.so: %.c | check_python
