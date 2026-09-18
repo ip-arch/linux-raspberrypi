@@ -20,3 +20,21 @@ SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/ras
 3. modules配下にカーネルモジュールサンプルプログラム群が展開されます。
 4. CとPython配下にはCとPythonのアプリケーション関係のファイルが展開されます。 
 5. setup下にRaspberry Pi Imagerで書き込んだbootfsに置くファイルがあります。32bitカーネル、Windows ICSとの接続のためのIP固定、sshで動作させるヘッドレスを実現します。 セミナー用に、ユーザー名とパスワードを固定しているので、実システムで運用する場合には、userconf.txtは置き換えてください。
+
+6. 実験ボードの基板部品表 (Digikey品番)
+	- SW: KS-00Q-02がEOL
+		- Digikey代替え　EG5805-ND108-D6R40F1LFS-ND
+	- 7seg LED: HDSP-H103
+		- 516-1229-5-ND
+	- TR: 2N7000
+		- 2N7000FS-ND
+	- 40pin メスソケット
+		- S9200-ND
+	- 赤色LED
+		- LTL2R3KRD-EM
+	- 抵抗 1kΩ x 8
+		- CF14JT1K00
+	- 抵抗 470Ω x 2
+		- CF14JT470R
+	-
+	-
