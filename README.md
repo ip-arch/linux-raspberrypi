@@ -36,3 +36,7 @@ SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/ras
 		- CF14JT1K00
 	- 抵抗 470Ω x 2
 		- CF14JT470R
+  	- プラスチックボルト M3 12mm x 2
+   		- 36-29444-ND
+    - ナイロンナット M3 x 2
+    	- RPC7082-ND  		 
