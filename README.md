@@ -23,7 +23,7 @@ SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/ras
 
 6. 実験ボードの基板部品表 (Digikey品番)
 	- SW: KS-00Q-02がEOL
-		- Digikey代替え　EG5805-ND108-D6R40F1LFS-ND
+		- Digikey代替え　108-D6R40F1LFS-ND
 	- 7seg LED: HDSP-H103
 		- 516-1229-5-ND
 	- TR: 2N7000
@@ -36,5 +36,3 @@ SBOM_DIST_URL := https://downloads.raspberrypi.com/raspios_lite_armhf/images/ras
 		- CF14JT1K00
 	- 抵抗 470Ω x 2
 		- CF14JT470R
-	-
-	-
